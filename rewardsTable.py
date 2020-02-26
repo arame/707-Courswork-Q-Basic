@@ -6,7 +6,7 @@ class RewardsTable:
     def __init__(self):
         self.rows = ConfigTable.rows
         self.columns = ConfigTable.columns
-        self.rewardValues = {"1": ConfigRewards.cell_clean, 
+        self.origRewardValues = {"1": ConfigRewards.cell_clean, 
                             "2":ConfigRewards.cell_clean, 
                             "3": ConfigRewards.cell_clean, 
                             "4": ConfigRewards.cell_clean, 
@@ -32,6 +32,7 @@ class RewardsTable:
                             "24": ConfigRewards.cell_clean,
                             "25": ConfigRewards.cell_dirty
                             }
+        self.rewardValues =  self.origRewardValues.copy()
 
         self.noDirtyCells = 0
         for r in self.rewardValues:
@@ -44,11 +45,16 @@ class RewardsTable:
         for i in range(self.rows):
             for j in range(self.columns):
                 k = k + 1
-                #idx = int(k)
                 self.table[i, j] = k
         print("Rewards table created")
 
+    def resetRewardValues(self):
+        self.rewardValues =  self.origRewardValues.copy()
+
     def getReward(self, idx):
-        temp = self.rewardValues.get(str(idx))
-        return temp
+        reward = self.rewardValues.get(str(idx))
+        return reward
+
+    def setRewardToClean(self, idx):
+        self.rewardValues[str(idx)] = ConfigRewards.cell_clean
         
