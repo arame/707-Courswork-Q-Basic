@@ -11,6 +11,6 @@ class ActionDirection(Enum):
 class Action:
     @staticmethod
     def randomDir():
-        temp = randint(1, 4)
-        temp1 = ActionDirection(temp)
-        return temp1
+        rdn = randint(1, 4)
+        return ActionDirection(rdn)
+

@@ -13,9 +13,10 @@ print("-"*100)
 print("Start of QLearning Basic design for AI vacuum cleaner")
 Hyperparam.display()
 print("-"*100)
-episodes = 0
+
 f = Floor()
 f.episodes()
+
 print("-"*100)
 print("End of QLearning Basic design for AI vacuum cleaner")
 Hyperparam.display()

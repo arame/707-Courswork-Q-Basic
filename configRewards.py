@@ -4,6 +4,7 @@ class ConfigRewards:
     cell_clean = -1
     cell_dirty = 10
     cell_inaccessible = -100
+    cell_finish = 100
 
     @staticmethod
     def display():

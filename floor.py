@@ -2,6 +2,7 @@ import copy
 from action import Action
 from action import ActionDirection
 from rewardsTable import RewardsTable
+from config import Config
 from configRewards import ConfigRewards
 from configTable import ConfigTable
 from state import State
@@ -14,62 +15,70 @@ class Floor:
     def __init__(self):
         self.reward = RewardsTable()
         self.qTable = QTable()
+        self.policy = Policy()
+        ConfigTable.createTableIds()
+        self.log = []
 
     def init_episode(self):
-        self.state = State()    # Always start in the top left corner cell, row = 0, column = 0
+        self.state = State()    # Always start in the top left corner cell, row = 0, column = 0. 
+                                # DirtyCellState is also zero
         self.newState = self.state
         self.terminateFlag = False
         self.superTerminateFlag = False
         self.noOfSteps = 0
         self.noOfDirtyCellsCleaned = 0
-        self.reward.resetRewardValues() # For a new episode the reward table needs to be reset to the original
+        self.dirtyCellsFound = []
+        self.noExplore = 0
+        self.noExploit = 0
 
     def episodes(self):
         for episode in range(Hyperparam.noOfEpisodes):
             self.episode(episode)
+            if self.policy.epsilon > Hyperparam.epsilon_threshold:
+                print(f"Epsilon limit {Hyperparam.epsilon_threshold} exceeded")
+                break
+        print("".join(self.log))
 
     def episode(self, episode):
+        self.episode1 = episode + 1
         print("-"*100)
         print(f"Start episode {episode + 1}")
         self.init_episode()
-        start_cell_idx = 1
-        firstReward = self.reward.getReward(start_cell_idx)
-        state = State()
-        self.qTable.update(state, state, firstReward)    # Special case update for the first cell
+        firstReward = self.reward.getReward(self.state)
+        self.qTable.update(State(), State(), firstReward)    # Special case update for the first cell
         print(f"First Reward for cell 1 is {firstReward}")
         while self.terminateFlag == False:
             self.selectPolicy()
             self.checkIfTooManySteps()
 
+        print(f"Explorations = {self.noExplore}")
+        print(f"Exploitations = {self.noExploit}")
+        print(f"Epsilon rate = {self.policy.epsilon}")
         print(f"end episode {episode + 1}")
+        
 
     def selectPolicy(self):
-        policy = Policy()
-        policy.next()
-        if policy.type is PolicyType.explore:
+        self.policy.next()
+        if self.policy.type is PolicyType.explore:
             self.explore() 
             return
 
-        if policy.type is PolicyType.exploit:
-            self.explore()
-            #self.exploit()
+        if self.policy.type is PolicyType.exploit:
+            self.exploit()
 
     def checkIfTooManySteps(self):
+        self.noOfSteps += 1
         if self.noOfSteps == 1000:
             self.terminateFlag = True
             self.superTerminateFlag = True
             print("Episode terminated unsucessfully")
 
     def explore(self):
-        if self.noOfSteps % 500 == 0:
-            print(f"explore on step {self.noOfSteps + 1}")
-
+        self.noExplore += 1
         oldState = copy.copy(self.state)
         reward = self.actionAndReward()
-        self.qTable.update(self.newState, oldState, reward)
-        self.noOfSteps += 1
-        idx = self.reward.table[self.state.row, self.state.column]
-        self.checkIfDirtyCell(idx, reward)
+        self.qTable.update(self.state, oldState, reward)
+        self.checkIfDirtyCell(reward)
 
     def actionAndReward(self):
         self.OffEdgeFlag = True
@@ -101,11 +110,11 @@ class Floor:
             # agent not moving off the edge of the floor
             return 0
 
-        self.newState.column = self.state.column
+        self.newState = copy.copy(self.state)
         self.newState.row = row
+
         self.OffEdgeFlag = False
-        idx = self.reward.table[row, self.state.column]
-        r = self.reward.getReward(idx)
+        r = self.reward.getReward(self.newState)
         if r == ConfigRewards.cell_inaccessible:
             # agent not moving as the cell is inaccessible
             return r
@@ -115,16 +124,15 @@ class Floor:
         return r
 
     def moveWest(self):
-        col = self.state.column + 1
-        if col >= ConfigTable.columns:
+        col = self.state.column - 1
+        if col < 0:
             # agent not moving off the edge of the floor
             return 0
 
-        self.newState.row = self.state.row
+        self.newState = copy.copy(self.state)
         self.newState.column = col
         self.OffEdgeFlag = False
-        idx = self.reward.table[self.state.row, col]
-        r = self.reward.getReward(idx)
+        r = self.reward.getReward(self.newState)
         if r == ConfigRewards.cell_inaccessible:
             # agent not moving as the cell is inaccessible
             return r
@@ -134,23 +142,21 @@ class Floor:
         return r
 
     def moveEast(self):
-        col = self.state.column - 1
-        if col < 0:
+        col = self.state.column + 1
+        if col >= ConfigTable.columns:
             # agent not moving off the edge of the floor
             return 0
 
-        self.newState.row = self.state.row
+        self.newState = copy.copy(self.state)
         self.newState.column = col
         self.OffEdgeFlag = False
-        idx = self.reward.table[self.state.row, col]
-        r = self.reward.getReward(idx)
+        r = self.reward.getReward(self.newState)
         if r == ConfigRewards.cell_inaccessible:
             # agent not moving as the cell is inaccessible
             return r
         
         # agent has moved to the new cell, update the column
         self.state.column = col
-        self.checkIfDirtyCell(idx, r)
         return r
 
     def moveSouth(self):
@@ -159,35 +165,52 @@ class Floor:
             # agent not moving off the edge of the floor
             return 0
 
-        self.newState.column = self.state.column
+        self.newState = copy.copy(self.state)
         self.newState.row = row
         self.OffEdgeFlag = False
-        idx = self.reward.table[row, self.state.column]
-        r = self.reward.getReward(idx)
-        if r == ConfigRewards.cell_inaccessible:
+        reward = self.reward.getReward(self.newState)
+        if reward == ConfigRewards.cell_inaccessible:
             # agent not moving as the cell is inaccessible
-            return r
+            return reward
         
         # agent has moved to the new cell, update the row
         self.state.row = row
-        return r       
-            
-    def checkIfDirtyCell(self, idx, reward):
+        return reward   
+     
+    def checkIfDirtyCell(self, reward):
         # If the cell was dirty, it should now be clean
+        idx = self.reward.getTableIndex(self.state)
         if reward == ConfigRewards.cell_dirty:
-            self.noOfDirtyCellsCleaned += 1
-            print(f"Dirty Cell {idx} cleaned no {self.noOfDirtyCellsCleaned}")
-            self.reward.setRewardToClean(idx)
+            self.setDirtyCellToClean(idx)
+
         # The termination condition is met if all the cells are cleaned
         if self.noOfDirtyCellsCleaned == self.reward.noDirtyCells:
             self.terminateFlag = True
-            print(f"Episode terminated after {self.noOfSteps} steps")
-    
+            print("**")
+            print(f"**Episode terminated after {self.noOfSteps} steps")
+            print("**")
+            self.log.append(f"Episode {self.episode1} completed after {self.noOfSteps} | ")
+
+    def setDirtyCellToClean(self, idx):
+        self.reward.setRewardToClean(idx)
+        index = ConfigTable.tableId[self.state.row, self.state.column]
+        amount = Config.dirtyCells.get(index)
+        self.state.dirtyCellIndex += amount
+        self.noOfDirtyCellsCleaned += 1
+        print(f"Dirty Cell cleaned id = {idx} no {self.noOfDirtyCellsCleaned} for step {self.noOfSteps}")
+
     def exploit(self):
-        #if self.noOfSteps % 500 == 0:
-        #print(f"exploit on step {self.noOfSteps}")
+        self.noExploit += 1
+        oldState = copy.copy(self.state)
         newState = self.qTable.getBestQvalue(self.state)
-        self.state = newState
-        idx = self.reward.table[self.state.row, self.state.column]
-        reward = self.reward.rewardValues[str(idx)]
-        self.checkIfDirtyCell(idx, reward)
+        if self.state == newState:
+            #print("No Q > 0 value found, so explore")
+            # No Q value found to go to a new location, so explore to a new one instead
+            reward = self.actionAndReward()
+            self.qTable.update(self.state, oldState, reward)
+        else:   
+            #print("Q value found, move to next cell")                 
+            self.state = copy.copy(newState)
+            idx = self.reward.getTableIndex(self.state)
+            reward = self.reward.rewardValues[str(idx)]
+        self.checkIfDirtyCell(reward)
