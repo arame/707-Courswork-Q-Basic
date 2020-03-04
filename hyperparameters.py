@@ -4,9 +4,9 @@ class Hyperparam:
     epsilon = 0.01
     epsilon_increase = 1.0001
     epsilon_threshold = 0.7
-    learning_rate = 0.8
-    discount_factor = 0.8
-    noOfEpisodes = 10
+    learning_rate = 0.5
+    discount_factor = 0.5
+    noOfEpisodes = 500
 
     @staticmethod
     def display():
