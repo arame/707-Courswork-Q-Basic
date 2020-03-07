@@ -10,7 +10,7 @@ class ConfigTable:
     
     @staticmethod 
     def createTableIds():
-        id = 0
+        id = -1
         for i in range(ConfigTable.rows):
             for j in range(ConfigTable.columns):
                 id = id + 1
@@ -19,7 +19,7 @@ class ConfigTable:
     @staticmethod
     def getCellIndex(state):
         idx = ConfigTable.table[state.row, state.column]
-        return idx - 1
+        return idx
 
     @staticmethod
     def getListIndex(state):

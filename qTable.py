@@ -24,7 +24,6 @@ class QTable:
         # print(f"Old Q = ({oldState.row}, {oldState.column}), index_old = {index_old}, old Value = {q_old}")
         # print(f"Update New Q = ({newState.row}, {newState.column}), index_new = {index_new}, new value = {q_new}, reward = {reward}")
         self.Q_Values[index_new] = q_new
-        w = 0
     
     def getMaxQValue(self):
         self.maxQ = 0
@@ -44,7 +43,7 @@ class QTable:
         self.getNextQValue(x + 1, y)
         self.getNextQValue(x, y - 1)
         self.getNextQValue(x, y + 1)
-        print(f"Best Q = {self.bestQ} ({self.bestState.row}, {self.bestState.column})")
+        #print(f"Best Q = {self.bestQ} ({self.bestState.row}, {self.bestState.column})")
         if self.bestQ == 0:
             return state
         return self.bestState
