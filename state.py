@@ -4,6 +4,9 @@ class State:
         self.row = row
         self.column = column
 
+    def printState(self):
+        print(f"({self.row}, {self.column})")
+
     @staticmethod
     def getInitialState():
         return {1: StateType.start, 2: StateType.clean, 3: StateType.clean, 4: StateType.clean,

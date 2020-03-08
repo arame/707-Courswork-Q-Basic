@@ -2,7 +2,7 @@ import copy
 from action import Action
 from action import ActionDirection
 from rewardsTable import RewardsTable
-from config import Config
+from dirtyCellIndex import DirtyCellIndex
 from configRewards import ConfigRewards
 from configTable import ConfigTable
 from state import State
@@ -14,7 +14,7 @@ from hyperparameters import Hyperparam
 class Floor:
     def __init__(self):
         self.reward = RewardsTable()
-        self.qTable = QTable(self.reward.rtableFull)
+        self.qTable = QTable(self.reward.rtable)
         self.policy = Policy()
         ConfigTable.createTableIds()
         self.log = []
@@ -39,16 +39,16 @@ class Floor:
                 print(f"Epsilon limit {Hyperparam.epsilon_threshold} exceeded")
                 break
         print("".join(self.log))
-        print(f"Final Q values = {self.qTable.Q_Values}")
+        print(f"Final Q values = {self.qTable.Q_Table}")
 
     def episode(self, episode):
         self.episode1 = episode + 1
         print("-"*100)
         print(f"Start episode {episode + 1}")
         self.init_episode()
-        firstReward = self.reward.getReward(self.state)
-        self.qTable.update(State(0, 0), State(0, 0), firstReward)    # Special case update for the first cell
-        print(f"First Reward for cell 1 is {firstReward}")
+        # firstReward = ConfigRewards.cell_clean
+        # self.qTable.update(State(0, 0), State(0, 0), firstReward)    # Special case update for the first cell
+        # print(f"First Reward for cell 1 is {firstReward}")
         while self.terminateFlag == False:
             self.selectPolicy()
             self.checkIfTooManySteps()
@@ -81,8 +81,7 @@ class Floor:
         reward = self.actionAndReward()
         self.qTable.update(self.newState, oldState, reward)
         if reward == ConfigRewards.cell_dirty:
-            cellIdx = ConfigTable.getCellIndex(self.newState)
-            ConfigTable.cellIndex[cellIdx] += 1
+            ConfigTable.dirtyCellIndexIncrement(self.newState)
         self.checkIfFinishCell(reward)
 
     def actionAndReward(self):
@@ -110,6 +109,7 @@ class Floor:
         return reward
 
     def moveNorth(self):
+        print(f"north ({self.state.row}, {self.state.column})")
         row = self.state.row - 1
         if row < 0:
             # agent not moving off the edge of the floor
@@ -119,16 +119,18 @@ class Floor:
         self.newState.row = row
 
         self.OffEdgeFlag = False
-        r = self.reward.getReward(self.newState)
-        if r == ConfigRewards.cell_inaccessible:
+        isInaccessible = self.reward.isInaccessible(self.newState)
+        if isInaccessible == True:
             # agent not moving as the cell is inaccessible
-            return r
+            return ConfigRewards.cell_inaccessible
         
+        r = self.reward.getReward(self.state, self.newState)
         # agent has moved to the new cell, update the row
         self.state.row = row
         return r
 
     def moveWest(self):
+        print(f"West ({self.state.row}, {self.state.column})")
         col = self.state.column - 1
         if col < 0:
             # agent not moving off the edge of the floor
@@ -137,16 +139,18 @@ class Floor:
         self.newState = copy.copy(self.state)
         self.newState.column = col
         self.OffEdgeFlag = False
-        r = self.reward.getReward(self.newState)
-        if r == ConfigRewards.cell_inaccessible:
+        isInaccessible = self.reward.isInaccessible(self.newState)
+        if isInaccessible == True:
             # agent not moving as the cell is inaccessible
-            return r
+            return ConfigRewards.cell_inaccessible
         
+        r = self.reward.getReward(self.state, self.newState)
         # agent has moved to the new cell, update the column
         self.state.column = col
         return r
 
     def moveEast(self):
+        print(f"East ({self.state.row}, {self.state.column})")
         col = self.state.column + 1
         if col >= ConfigTable.columns:
             # agent not moving off the edge of the floor
@@ -155,16 +159,18 @@ class Floor:
         self.newState = copy.copy(self.state)
         self.newState.column = col
         self.OffEdgeFlag = False
-        r = self.reward.getReward(self.newState)
-        if r == ConfigRewards.cell_inaccessible:
+        isInaccessible = self.reward.isInaccessible(self.newState)
+        if isInaccessible == True:
             # agent not moving as the cell is inaccessible
-            return r
+            return ConfigRewards.cell_inaccessible
         
+        r = self.reward.getReward(self.state, self.newState)
         # agent has moved to the new cell, update the column
         self.state.column = col
         return r
 
     def moveSouth(self):
+        print(f"South ({self.state.row}, {self.state.column})")
         row = self.state.row + 1
         if row >= ConfigTable.rows:
             # agent not moving off the edge of the floor
@@ -173,14 +179,15 @@ class Floor:
         self.newState = copy.copy(self.state)
         self.newState.row = row
         self.OffEdgeFlag = False
-        reward = self.reward.getReward(self.newState)
-        if reward == ConfigRewards.cell_inaccessible:
+        isInaccessible = self.reward.isInaccessible(self.newState)
+        if isInaccessible == True:
             # agent not moving as the cell is inaccessible
-            return reward
+            return ConfigRewards.cell_inaccessible
         
+        r = self.reward.getReward(self.state, self.newState)
         # agent has moved to the new cell, update the row
         self.state.row = row
-        return reward   
+        return r   
      
     def checkIfFinishCell(self, reward):
         # check if the last cell has been reached

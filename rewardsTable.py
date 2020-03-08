@@ -1,5 +1,6 @@
 from configRewards import ConfigRewards
 from configTable import ConfigTable
+from dirtyCellIndex import DirtyCellIndex
 import numpy as np
 import pandas as pd
 from state import State
@@ -14,17 +15,17 @@ class RewardsTable:
         self.noDirtyCellsCleaned = 0
         self.initialState = State.getInitialState()
         ConfigTable.cellIndex = []
-        self.cellZeroRewards = -1 * np.ones((4),dtype=np.int16)
-        self.cellZeroRewards[3] = 100
-        self.cellCleanRewards = -1 * np.ones((4),dtype=np.int16)
-        self.cellD1Rewards = -1 * np.ones((4),dtype=np.int16)
-        self.cellD1Rewards[0] = 10
-        self.cellD1Rewards[2] = 10
-        self.cellD2Rewards = -1 * np.ones((4),dtype=np.int16)
-        self.cellD2Rewards[0] = 10
-        self.cellD2Rewards[1] = 10
-        self.cellInaccessible = -100 * np.ones((4),dtype=np.int16)
-        self.fromCells = [0, 1, 2, 3, 4, 6, 8, 9, 10, 11, 13, 14, 15]
+        self.cellZeroRewards = ConfigRewards.cell_clean * np.ones((4),dtype=np.int16)
+        self.cellZeroRewards[3] = ConfigRewards.cell_finish
+        self.cellCleanRewards = ConfigRewards.cell_clean * np.ones((4),dtype=np.int16)
+        self.cellD1Rewards = ConfigRewards.cell_clean * np.ones((4),dtype=np.int16)
+        self.cellD1Rewards[0] = ConfigRewards.cell_dirty
+        self.cellD1Rewards[2] = ConfigRewards.cell_dirty
+        self.cellD2Rewards = ConfigRewards.cell_clean * np.ones((4),dtype=np.int16)
+        self.cellD2Rewards[0] = ConfigRewards.cell_dirty
+        self.cellD2Rewards[1] = ConfigRewards.cell_dirty
+        self.cellInaccessible = ConfigRewards.cell_inaccessible * np.ones((4),dtype=np.int16)
+        
 
         self.dirtyCell1Id = 9
         self.dirtyCell2Id = 13
@@ -38,8 +39,6 @@ class RewardsTable:
         self.rtable = np.empty((0, 16))
         for row in self.rtableFull:
             self.rtable = np.append(self.rtable, [row.cellReward], axis = 0)
-
-        
     
     def loadRTable(self):
         fromCellId = 0
@@ -65,14 +64,18 @@ class RewardsTable:
         index2 = 5
         index3 = 8
         self.addRowsToTable3(fromCellId, index1, self.cellZeroRewards, index2, self.cellInaccessible, index3, self.cellCleanRewards)
-        # Cell 5 is inaccessible so not put on the Rewards table
+        # Cell 5 is inaccessible 
+        fromCellId = 5
+        self.addInaccessibleRowsToTable(fromCellId)
         fromCellId = 6
         index1 = 2
         index2 = 5
         index3 = 7
         index4 = 10
         self.addRowsToTable4(fromCellId, index1, self.cellCleanRewards, index2, self.cellInaccessible, index3, self.cellInaccessible, index4, self.cellCleanRewards)
-        # Cell 7 is inaccessible so not put on the Rewards table
+        # Cell 7 is inaccessible 
+        fromCellId = 7
+        self.addInaccessibleRowsToTable(fromCellId)
         fromCellId = 8
         index1 = 4
         index2 = 9
@@ -95,7 +98,9 @@ class RewardsTable:
         index2 = 10
         index3 = 15
         self.addRowsToTable3(fromCellId, index1, self.cellInaccessible, index2, self.cellCleanRewards, index3, self.cellCleanRewards)
-        # Cell 12 is inaccessible so not put on the Rewards table    
+        # Cell 12 is inaccessible so not put on the Rewards table  
+        fromCellId = 12
+        self.addInaccessibleRowsToTable(fromCellId)  
         fromCellId = 13
         index1 = 9
         index2 = 12
@@ -111,6 +116,15 @@ class RewardsTable:
         index2 = 14
         self.addRowsToTable2(fromCellId, index1, self.cellCleanRewards, index2, self.cellCleanRewards)
     
+    def addInaccessibleRowsToTable(self, fromCellId):
+        for _ in range(4):
+            self.id += 1
+            row = RewardsTableRows(self.noCells)
+            row.id = id
+            row.fromCellId = fromCellId
+            row.insertInaccessible()
+            self.rtableFull.append(row)
+
     def addRowsToTable2(self, fromCellId, index1, items1, index2, items2):
         for i in range(4):
             self.id += 1
@@ -138,26 +152,36 @@ class RewardsTable:
             row.insert4(index1, items1[i], index2, items2[i], index3, items3[i], index4, items4[i])
             self.rtableFull.append(row)
 
-    def getListIndex(self, state):
-        self.cellIdx = ConfigTable.getCellIndex(state)
-        idx = ConfigTable.cellIndex[self.cellIdx]
-        return idx
+    # def getListIndex(self, state):
+    #     self.cellIdx = ConfigTable.getCellIndex(state)
+    #     idx = DirtyCellIndex[self.cellIdx]
+    #     return idx
 
-    def getReward(self, state):
-        self.index = self.getListIndex(state)
-        reward = self.rewardValues[self.index]
+    def getReward(self, oldstate, newstate):
+        old = ConfigTable.getRewardTableIndex(oldstate) * 4
+        new = ConfigTable.getRewardTableIndex(newstate)
+        reward = self.rtable[old, new]
         #print(f"state = ({state.row}, {state.column}), idx = {self.index}, reward = {reward}")
-        if reward == ConfigRewards.cell_dirty:
-            self.ProcessDirtyCell(state)
 
         return reward
 
+    def isInaccessible(self, state):
+        cellIdx = ConfigTable.getCellIndex(state)
+        if cellIdx == self.inaccessible1Cell or cellIdx == self.inaccessible2Cell or cellIdx == self.inaccessible3Cell:
+            return True
+        
+        return False
+
 class RewardsTableRows:
     def __init__(self, noOfCells):
+        self.noOfCells = noOfCells
         self.id = 0
         self.fromCellId = 0
         self.dirtyId = 0
-        self.cellReward = np.zeros((noOfCells),dtype=np.int16)
+        self.cellReward = np.zeros((self.noOfCells),dtype=np.int16)
+
+    def insertInaccessible(self):
+        self.cellReward = np.ones((self.noOfCells),dtype=np.int16) * ConfigRewards.cell_inaccessible
 
     def insert2(self, index1, item1, index2, item2):
         self.cellReward[index1] = item1
@@ -170,4 +194,6 @@ class RewardsTableRows:
     def insert4(self, index1, item1, index2, item2, index3, item3, index4, item4):
         self.insert3(index1, item1, index2, item2, index3, item3)
         self.cellReward[index4] = item4
+
+
     

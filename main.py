@@ -7,7 +7,6 @@ from rewardsTable import RewardsTable
 from qTable import QTable
 from state import State
 
-
 print("\n"*10)
 print("-"*100)
 print("Start of QLearning Basic design for AI vacuum cleaner")
