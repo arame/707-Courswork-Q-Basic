@@ -13,8 +13,6 @@ class RewardsTable:
         self.rewardValues = []
         self.noDirtyCellsCleaned = 0
         self.initialState = State.getInitialState()
-        itemId = 0
-        noDirtyCells = 0
         ConfigTable.cellIndex = []
         self.cellZeroRewards = -1 * np.ones((4),dtype=np.int16)
         self.cellZeroRewards[3] = 100
@@ -34,8 +32,16 @@ class RewardsTable:
         self.inaccessible2Cell = 7
         self.inaccessible3Cell = 12
         self.noCells = 16
-        self.rtable = []
+        self.rtableFull = []
         self.id = -1
+        self.loadRTable()
+        self.rtable = np.empty((0, 16))
+        for row in self.rtableFull:
+            self.rtable = np.append(self.rtable, [row.cellReward], axis = 0)
+
+        
+    
+    def loadRTable(self):
         fromCellId = 0
         index1 = 1
         index2 = 4
@@ -112,7 +118,7 @@ class RewardsTable:
             row.id = id
             row.fromCellId = fromCellId
             row.insert2(index1, items1[i], index2, items2[i])
-            self.rtable.append(row)
+            self.rtableFull.append(row)
 
     def addRowsToTable3(self, fromCellId, index1, items1, index2, items2, index3, items3):
         for i in range(4):
@@ -121,7 +127,7 @@ class RewardsTable:
             row.id = id
             row.fromCellId = fromCellId
             row.insert3(index1, items1[i], index2, items2[i], index3, items3[i])
-            self.rtable.append(row)
+            self.rtableFull.append(row)
 
     def addRowsToTable4(self, fromCellId, index1, items1, index2, items2, index3, items3, index4, items4):
         for i in range(4):
@@ -130,7 +136,7 @@ class RewardsTable:
             row.id = id
             row.fromCellId = fromCellId
             row.insert4(index1, items1[i], index2, items2[i], index3, items3[i], index4, items4[i])
-            self.rtable.append(row)
+            self.rtableFull.append(row)
 
     def getListIndex(self, state):
         self.cellIdx = ConfigTable.getCellIndex(state)

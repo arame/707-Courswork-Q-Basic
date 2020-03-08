@@ -14,7 +14,7 @@ from hyperparameters import Hyperparam
 class Floor:
     def __init__(self):
         self.reward = RewardsTable()
-        self.qTable = QTable(self.reward.rewardValues.__len__())
+        self.qTable = QTable(self.reward.rtableFull)
         self.policy = Policy()
         ConfigTable.createTableIds()
         self.log = []
