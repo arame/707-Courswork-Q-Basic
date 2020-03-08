@@ -158,8 +158,8 @@ class RewardsTable:
     #     return idx
 
     def getReward(self, oldstate, newstate):
-        old = ConfigTable.getRewardTableIndex(oldstate) * 4
-        new = ConfigTable.getRewardTableIndex(newstate)
+        old = ConfigTable.getCellIndex(oldstate) * 4  + ConfigTable.dirtyCellIndex
+        new = ConfigTable.getCellIndex(newstate)
         reward = self.rtable[old, new]
         #print(f"state = ({state.row}, {state.column}), idx = {self.index}, reward = {reward}")
 

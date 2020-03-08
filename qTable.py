@@ -4,6 +4,7 @@ from configTable import ConfigTable
 from hyperparameters import Hyperparam
 from state import State
 from rewardsTable import RewardsTable
+from dirtyCellIndex import DirtyCellIndex
 
 class QTable:
     def __init__(self, rtable):
@@ -14,16 +15,16 @@ class QTable:
     def update(self, newState, oldState, reward):
         alpha = Hyperparam.learning_rate
         gamma = Hyperparam.discount_factor
-        old = ConfigTable.getRewardTableIndex(oldState)
-        new = ConfigTable.getRewardTableIndex(newState)
-        q_old = self.Q_Table[old.row, old.column]
+        old = ConfigTable.getCellIndex(oldState) * 4
+        new = ConfigTable.getCellIndex(newState)
+        q_old = self.Q_Table[old, new]
         self.q_max = np.amax(self.Q_Table)
         #self.getMaxQValue()
         q_new = q_old + alpha * (reward + gamma * self.q_max - q_old)
         # print("-"*50)
         # print(f"Old Q = ({oldState.row}, {oldState.column}), index_old = {index_old}, old Value = {q_old}")
         # print(f"Update New Q = ({newState.row}, {newState.column}), index_new = {index_new}, new value = {q_new}, reward = {reward}")
-        self.Q_Table[new.row, new.column] = q_new
+        self.Q_Table[old, new] = q_new
     
     # def getMaxQValue(self):
     #     self.maxQ = 0
@@ -39,25 +40,25 @@ class QTable:
         
         self.bestState = copy.copy(state)
         self.bestQ = 0
-        self.getNextQValue(x - 1, y)
-        self.getNextQValue(x + 1, y)
-        self.getNextQValue(x, y - 1)
-        self.getNextQValue(x, y + 1)
+        self.getNextQValue(state, State(x - 1, y))
+        self.getNextQValue(state, State(x + 1, y))
+        self.getNextQValue(state, State(x, y - 1))
+        self.getNextQValue(state, State(x, y + 1))
         #print(f"Best Q = {self.bestQ} ({self.bestState.row}, {self.bestState.column})")
         if self.bestQ == 0:
             return state
         return self.bestState
 
-    def getNextQValue(self, row, column):
-        if row < 0 or row >= ConfigTable.rows:
+    def getNextQValue(self, state, nextState):
+        if nextState.row < 0 or nextState.row >= ConfigTable.rows:
             return
 
-        if column < 0 or column >= ConfigTable.columns:
+        if nextState.column < 0 or nextState.column >= ConfigTable.columns:
             return 
 
-        state = State(row, column)
-        index = ConfigTable.getRewardTableIndex(state)
-        Q = self.Q_Table[index.row, index.column]
+        old = ConfigTable.getCellIndex(state) * 4 + ConfigTable.dirtyCellIndex
+        new = ConfigTable.getCellIndex(nextState)
+        Q = self.Q_Table[old, new]
         if Q > self.bestQ:
             self.bestQ = Q
-            self.bestState = State(row, column)
+            self.bestState = copy.copy(nextState)

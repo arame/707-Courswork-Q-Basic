@@ -39,7 +39,9 @@ class Floor:
                 print(f"Epsilon limit {Hyperparam.epsilon_threshold} exceeded")
                 break
         print("".join(self.log))
-        print(f"Final Q values = {self.qTable.Q_Table}")
+        print("Final Q values")
+        for row in self.qTable.Q_Table:
+            print(row)
 
     def episode(self, episode):
         self.episode1 = episode + 1
@@ -109,7 +111,7 @@ class Floor:
         return reward
 
     def moveNorth(self):
-        print(f"north ({self.state.row}, {self.state.column})")
+        #print(f"north ({self.state.row}, {self.state.column})")
         row = self.state.row - 1
         if row < 0:
             # agent not moving off the edge of the floor
@@ -130,7 +132,7 @@ class Floor:
         return r
 
     def moveWest(self):
-        print(f"West ({self.state.row}, {self.state.column})")
+        #print(f"West ({self.state.row}, {self.state.column})")
         col = self.state.column - 1
         if col < 0:
             # agent not moving off the edge of the floor
@@ -150,7 +152,7 @@ class Floor:
         return r
 
     def moveEast(self):
-        print(f"East ({self.state.row}, {self.state.column})")
+        #print(f"East ({self.state.row}, {self.state.column})")
         col = self.state.column + 1
         if col >= ConfigTable.columns:
             # agent not moving off the edge of the floor
@@ -170,7 +172,7 @@ class Floor:
         return r
 
     def moveSouth(self):
-        print(f"South ({self.state.row}, {self.state.column})")
+        #print(f"South ({self.state.row}, {self.state.column})")
         row = self.state.row + 1
         if row >= ConfigTable.rows:
             # agent not moving off the edge of the floor
@@ -210,7 +212,8 @@ class Floor:
             return
   
         #print("Q value found, move to next cell")                 
-        self.state = copy.copy(newState)
-        idx = self.reward.getListIndex(self.state)
-        reward = self.reward.rewardValues[idx]
+        #self.state = copy.copy(newState)
+        #idx = self.reward.getListIndex(self.state)
+        reward = self.reward.getReward(self.state, newState)
         self.checkIfFinishCell(reward)
+        self.state = copy.copy(newState)
