@@ -1,6 +1,5 @@
 from configRewards import ConfigRewards
 from configTable import ConfigTable
-from dirtyCellIndex import DirtyCellIndex
 import numpy as np
 import pandas as pd
 from state import State
@@ -158,7 +157,7 @@ class RewardsTable:
     #     return idx
 
     def getReward(self, oldstate, newstate):
-        old = ConfigTable.getCellIndex(oldstate) * 4  + ConfigTable.dirtyCellIndex
+        old = ConfigTable.getIndexForDirtyCellState(oldstate)
         new = ConfigTable.getCellIndex(newstate)
         reward = self.rtable[old, new]
         #print(f"state = ({state.row}, {state.column}), idx = {self.index}, reward = {reward}")

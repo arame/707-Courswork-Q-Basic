@@ -2,7 +2,6 @@ import copy
 from action import Action
 from action import ActionDirection
 from rewardsTable import RewardsTable
-from dirtyCellIndex import DirtyCellIndex
 from configRewards import ConfigRewards
 from configTable import ConfigTable
 from state import State
@@ -31,6 +30,7 @@ class Floor:
         self.dirtyCellsFound = []
         self.noExplore = 0
         self.noExploit = 0
+        ConfigTable.dirtyCellIndex = 0
 
     def episodes(self):
         for episode in range(Hyperparam.noOfEpisodes):

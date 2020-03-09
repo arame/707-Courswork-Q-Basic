@@ -28,3 +28,8 @@ class ConfigTable:
     def dirtyCellIndexIncrement(state):
         idx = ConfigTable.getCellIndex(state)
         ConfigTable.dirtyCellIndex += ConfigTable.dirtyCells[idx]
+
+    @staticmethod
+    def getIndexForDirtyCellState(state):
+        idx = ConfigTable.getCellIndex(state)
+        return idx * 4 + ConfigTable.dirtyCellIndex

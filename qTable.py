@@ -4,7 +4,6 @@ from configTable import ConfigTable
 from hyperparameters import Hyperparam
 from state import State
 from rewardsTable import RewardsTable
-from dirtyCellIndex import DirtyCellIndex
 
 class QTable:
     def __init__(self, rtable):
@@ -15,25 +14,16 @@ class QTable:
     def update(self, newState, oldState, reward):
         alpha = Hyperparam.learning_rate
         gamma = Hyperparam.discount_factor
-        old = ConfigTable.getCellIndex(oldState) * 4
+        old = ConfigTable.getIndexForDirtyCellState(oldState)
         new = ConfigTable.getCellIndex(newState)
         q_old = self.Q_Table[old, new]
         self.q_max = np.amax(self.Q_Table)
-        #self.getMaxQValue()
         q_new = q_old + alpha * (reward + gamma * self.q_max - q_old)
         # print("-"*50)
         # print(f"Old Q = ({oldState.row}, {oldState.column}), index_old = {index_old}, old Value = {q_old}")
         # print(f"Update New Q = ({newState.row}, {newState.column}), index_new = {index_new}, new value = {q_new}, reward = {reward}")
         self.Q_Table[old, new] = q_new
     
-    # def getMaxQValue(self):
-    #     self.maxQ = 0
-    #     lengthTable = ConfigTable.rows * ConfigTable.columns
-    #     for i in range(lengthTable):
-    #         idx = ConfigTable.cellIndex[i]
-    #         Q = self.Q_Table[idx]
-    #         if Q > self.maxQ:
-    #             self.maxQ = Q
     def getBestQvalue(self, state):
         x = state.row
         y = state.column
@@ -56,7 +46,7 @@ class QTable:
         if nextState.column < 0 or nextState.column >= ConfigTable.columns:
             return 
 
-        old = ConfigTable.getCellIndex(state) * 4 + ConfigTable.dirtyCellIndex
+        old = ConfigTable.getIndexForDirtyCellState(state)
         new = ConfigTable.getCellIndex(nextState)
         Q = self.Q_Table[old, new]
         if Q > self.bestQ:
