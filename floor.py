@@ -203,7 +203,7 @@ class Floor:
             self.log.append(f"Episode {self.episode1} completed after {self.noOfSteps} | ")
 
     def exploit(self):
-        self.noExploit += 1
+        
         oldState = copy.copy(self.state)
         newState = self.qTable.getBestQvalue(self.state)
         if oldState == newState:
@@ -211,6 +211,7 @@ class Floor:
             self.explore()
             return
   
+        self.noExploit += 1
         #print("Q value found, move to next cell")                 
         #self.state = copy.copy(newState)
         #idx = self.reward.getListIndex(self.state)
