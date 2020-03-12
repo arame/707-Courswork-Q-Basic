@@ -9,12 +9,14 @@ from qTable import QTable
 from policy import Policy
 from policy import PolicyType
 from hyperparameters import Hyperparam
+from stats import Stats
 
 class Floor:
     def __init__(self):
         self.reward = RewardsTable()
         self.qTable = QTable(self.reward.rtable)
         self.policy = Policy()
+        self.noOfStepsList = []
         ConfigTable.createTableIds()
         self.log = []
 
@@ -31,6 +33,7 @@ class Floor:
         self.noExplore = 0
         self.noExploit = 0
         ConfigTable.dirtyCellIndex = 0
+
 
     def episodes(self):
         for episode in range(Hyperparam.noOfEpisodes):
@@ -55,11 +58,14 @@ class Floor:
             self.selectPolicy()
             self.checkIfTooManySteps()
 
-        print(f"Explorations = {self.noExplore}")
+        message = f"Steps = {self.noOfSteps}, Explorations = {self.noExplore}, Exploitations = {self.noExploit}, Epsilon rate = {self.policy.epsilon}, Episode = {episode + 1}"
+        with open("Output.txt", "w") as text_file:
+            print(message, file=text_file)
+        print(f"Explorations = {self.noExplore}")    
         print(f"Exploitations = {self.noExploit}")
         print(f"Epsilon rate = {self.policy.epsilon}")
         print(f"end episode {episode + 1}")
-        
+        self.noOfStepsList.append(Stats(episode, self.noOfSteps, self.noExplore, self.noExploit, self.policy.epsilon))
 
     def selectPolicy(self):
         self.policy.next()
@@ -216,5 +222,6 @@ class Floor:
         #self.state = copy.copy(newState)
         #idx = self.reward.getListIndex(self.state)
         reward = self.reward.getReward(self.state, newState)
+        self.qTable.update(newState, oldState, reward)
         self.checkIfFinishCell(reward)
         self.state = copy.copy(newState)
