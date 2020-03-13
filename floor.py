@@ -202,11 +202,12 @@ class Floor:
         if reward == ConfigRewards.cell_finish:
             # The termination condition is met if all the cells are cleaned and the 
             # agent has returned to the cell it started in
+            noSteps = self.noOfSteps + 1
             self.terminateFlag = True
             print("**")
-            print(f"**Episode terminated after {self.noOfSteps} steps")
+            print(f"**Episode terminated after {noSteps} steps")
             print("**")
-            self.log.append(f"Episode {self.episode1} completed after {self.noOfSteps} | ")
+            self.log.append(f"Episode {self.episode1} completed after {noSteps} | ")
 
     def exploit(self):
         
