@@ -12,7 +12,6 @@ class RewardsTable:
         self.cellIdCount = self.rows * self.columns
         self.rewardValues = []
         self.noDirtyCellsCleaned = 0
-        self.initialState = State.getInitialState()
         ConfigTable.cellIndex = []
         self.cellZeroRewards = ConfigRewards.cell_clean * np.ones((4),dtype=np.int16)
         self.cellZeroRewards[3] = ConfigRewards.cell_finish
@@ -150,11 +149,6 @@ class RewardsTable:
             row.fromCellId = fromCellId
             row.insert4(index1, items1[i], index2, items2[i], index3, items3[i], index4, items4[i])
             self.rtableFull.append(row)
-
-    # def getListIndex(self, state):
-    #     self.cellIdx = ConfigTable.getCellIndex(state)
-    #     idx = DirtyCellIndex[self.cellIdx]
-    #     return idx
 
     def getReward(self, oldstate, newstate):
         old = ConfigTable.getIndexForDirtyCellState(oldstate)

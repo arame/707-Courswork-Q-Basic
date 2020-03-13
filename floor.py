@@ -1,4 +1,6 @@
 import copy
+import csv
+import numpy as np
 from action import Action
 from action import ActionDirection
 from rewardsTable import RewardsTable
@@ -10,6 +12,7 @@ from policy import Policy
 from policy import PolicyType
 from hyperparameters import Hyperparam
 from stats import Stats
+from showStats import ShowStats
 
 class Floor:
     def __init__(self):
@@ -27,7 +30,7 @@ class Floor:
         self.newState = self.state
         self.terminateFlag = False
         self.superTerminateFlag = False
-        self.noOfSteps = 0
+        self.noOfSteps = 1
         self.noOfDirtyCellsCleaned = 0
         self.dirtyCellsFound = []
         self.noExplore = 0
@@ -38,11 +41,15 @@ class Floor:
     def episodes(self):
         for episode in range(Hyperparam.noOfEpisodes):
             self.episode(episode)
-            if self.policy.epsilon > Hyperparam.epsilon_threshold:
-                print(f"Epsilon limit {Hyperparam.epsilon_threshold} exceeded")
-                break
+
+        plot = ShowStats()
+        plot.invoke(self.noOfStepsList)
         print("".join(self.log))
         print("Final Q values")
+
+        fileName = f'FinalQTableLR{Hyperparam.learning_rate}DF{Hyperparam.discount_factor}.csv'
+        with open(fileName, 'w', newline='') as csvfile:
+            np.savetxt(csvfile,self.qTable.Q_Table, delimiter=',', fmt='%10f')
         for row in self.qTable.Q_Table:
             print(row)
 
@@ -51,18 +58,14 @@ class Floor:
         print("-"*100)
         print(f"Start episode {episode + 1}")
         self.init_episode()
-        # firstReward = ConfigRewards.cell_clean
-        # self.qTable.update(State(0, 0), State(0, 0), firstReward)    # Special case update for the first cell
-        # print(f"First Reward for cell 1 is {firstReward}")
         while self.terminateFlag == False:
             self.selectPolicy()
             self.checkIfTooManySteps()
 
         message = f"Steps = {self.noOfSteps}, Explorations = {self.noExplore}, Exploitations = {self.noExploit}, Epsilon rate = {self.policy.epsilon}, Episode = {episode + 1}"
-        with open("Output.txt", "w") as text_file:
+        with open("Output.txt", "a") as text_file:
             print(message, file=text_file)
-        print(f"Explorations = {self.noExplore}")    
-        print(f"Exploitations = {self.noExploit}")
+        print(f"Explorations = {self.noExplore}, Exploitations = {self.noExploit}")
         print(f"Epsilon rate = {self.policy.epsilon}")
         print(f"end episode {episode + 1}")
         self.noOfStepsList.append(Stats(episode, self.noOfSteps, self.noExplore, self.noExploit, self.policy.epsilon))
@@ -219,9 +222,9 @@ class Floor:
   
         self.noExploit += 1
         #print("Q value found, move to next cell")                 
-        #self.state = copy.copy(newState)
-        #idx = self.reward.getListIndex(self.state)
         reward = self.reward.getReward(self.state, newState)
         self.qTable.update(newState, oldState, reward)
+        if reward == ConfigRewards.cell_dirty:
+            ConfigTable.dirtyCellIndexIncrement(newState)
         self.checkIfFinishCell(reward)
         self.state = copy.copy(newState)

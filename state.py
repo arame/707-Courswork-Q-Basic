@@ -7,16 +7,6 @@ class State:
     def printState(self):
         print(f"({self.row}, {self.column})")
 
-    @staticmethod
-    def getInitialState():
-        return {1: StateType.start, 2: StateType.clean, 3: StateType.clean, 4: StateType.clean,
-                            5: StateType.clean, 6: StateType.inaccessible, 7: StateType.dirty, 8:StateType.inaccessible,
-                            9: StateType.clean, 10: StateType.dirty, 11: StateType.clean, 12: StateType.clean,
-                            13: StateType.inaccessible, 14: StateType.dirty, 15: StateType.clean, 16: StateType.clean } 
-
-        
-        
-
     # This method allows comparison between objects
     def __eq__(self, other):
         if not isinstance(other, State):

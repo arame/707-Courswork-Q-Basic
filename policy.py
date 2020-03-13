@@ -13,14 +13,11 @@ class Policy:
         self.type = PolicyType(explore)     # By default the policy type is explore
 
     def next(self):
-        if np.random.uniform() > self.epsilon:
+        if np.random.uniform() < self.epsilon:
             self.type = PolicyType.explore
         else:
             self.type = PolicyType.exploit
-        
-        if self.epsilon > Hyperparam.epsilon_threshold:
-            return
 
-        self.epsilon = self.epsilon * Hyperparam.epsilon_increase
+        self.epsilon = self.epsilon * Hyperparam.epsilon_decay
 
 
