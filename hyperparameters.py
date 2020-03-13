@@ -4,7 +4,7 @@ class Hyperparam:
     epsilon = 0.9
     epsilon_decay = 0.9999
     learning_rate = 0.5
-    discount_factor = 0.99
+    discount_factor = 0.5
     noOfEpisodes = 5000
 
     @staticmethod

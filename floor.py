@@ -30,7 +30,7 @@ class Floor:
         self.newState = self.state
         self.terminateFlag = False
         self.superTerminateFlag = False
-        self.noOfSteps = 1
+        self.noOfSteps = 0
         self.noOfDirtyCellsCleaned = 0
         self.dirtyCellsFound = []
         self.noExplore = 0
