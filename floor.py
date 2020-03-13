@@ -62,9 +62,6 @@ class Floor:
             self.selectPolicy()
             self.checkIfTooManySteps()
 
-        message = f"Steps = {self.noOfSteps}, Explorations = {self.noExplore}, Exploitations = {self.noExploit}, Epsilon rate = {self.policy.epsilon}, Episode = {episode + 1}"
-        with open("Output.txt", "a") as text_file:
-            print(message, file=text_file)
         print(f"Explorations = {self.noExplore}, Exploitations = {self.noExploit}")
         print(f"Epsilon rate = {self.policy.epsilon}")
         print(f"end episode {episode + 1}")
