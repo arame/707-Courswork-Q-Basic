@@ -47,7 +47,7 @@ class Floor:
         print("".join(self.log))
         print("Final Q values")
 
-        fileName = f'FinalQTableLR{Hyperparam.learning_rate}DF{Hyperparam.discount_factor}.csv'
+        fileName = f'FinalQTable_LR{Hyperparam.learning_rate}_DF{Hyperparam.discount_factor}.csv'
         with open(fileName, 'w', newline='') as csvfile:
             np.savetxt(csvfile,self.qTable.Q_Table, delimiter=',', fmt='%10f')
         for row in self.qTable.Q_Table:
