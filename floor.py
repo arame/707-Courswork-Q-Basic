@@ -42,16 +42,16 @@ class Floor:
         for episode in range(Hyperparam.noOfEpisodes):
             self.episode(episode)
 
-        plot = ShowStats()
-        plot.invoke(self.noOfStepsList)
         print("".join(self.log))
-        print("Final Q values")
 
         fileName = f'FinalQTable_LR{Hyperparam.learning_rate}_DF{Hyperparam.discount_factor}.csv'
+        print(f"Save Final Q values to {fileName}")
+
         with open(fileName, 'w', newline='') as csvfile:
             np.savetxt(csvfile,self.qTable.Q_Table, delimiter=',', fmt='%10f')
-        for row in self.qTable.Q_Table:
-            print(row)
+
+        plot = ShowStats()
+        plot.invoke(self.noOfStepsList)
 
     def episode(self, episode):
         self.episode1 = episode + 1
@@ -210,7 +210,6 @@ class Floor:
             self.log.append(f"Episode {self.episode1} completed after {noSteps} | ")
 
     def exploit(self):
-        
         oldState = copy.copy(self.state)
         newState = self.qTable.getBestQvalue(self.state)
         if oldState == newState:
